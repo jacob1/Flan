@@ -54,7 +54,7 @@ public class GroupPlayerScreenHandler extends PagedServerOnlyScreenHandler<Claim
 
     @Override
     protected void fillInventoryWith() {
-        List<GameProfile> players = this.data.getClaim().playersFromGroup(this.player.getServer(), this.data.getGroup());
+        List<GameProfile> players = this.data.getClaim().playersFromGroup(this.player.level().getServer(), this.data.getGroup());
         for (int i = 0; i < 54; i++) {
             if (i == 0) {
                 ItemStack stack = ServerScreenHelper.createStack(Items.TNT,
@@ -75,7 +75,7 @@ public class GroupPlayerScreenHandler extends PagedServerOnlyScreenHandler<Claim
                 int id = (i % 9) + row * 7 - 1 + this.getPage() * 28;
                 if (id < players.size()) {
                     ItemStack stack = ServerScreenHelper.createStack(Items.PLAYER_HEAD, null);
-                    stack.set(DataComponents.PROFILE, new ResolvableProfile(players.get(id)));
+                    stack.set(DataComponents.PROFILE, ResolvableProfile.createResolved(players.get(id)));
                     this.slots.get(i).set(stack);
                 } else
                     this.slots.get(i).set(ItemStack.EMPTY);
@@ -92,16 +92,16 @@ public class GroupPlayerScreenHandler extends PagedServerOnlyScreenHandler<Claim
     protected boolean handleSlotClicked(ServerPlayer player, int index, Slot slot, int clickType) {
         if (index == 0) {
             player.closeContainer();
-            player.getServer().execute(() -> GroupScreenHandler.openGroupMenu(player, this.data.getClaim()));
+            player.level().getServer().execute(() -> GroupScreenHandler.openGroupMenu(player, this.data.getClaim()));
             ServerScreenHelper.playSongToPlayer(player, SoundEvents.UI_BUTTON_CLICK, 1, 1f);
             return true;
         }
         if (index == 3) {
             player.closeContainer();
-            player.getServer().execute(() -> StringResultScreenHandler.createNewStringResult(player, (s) -> {
-                boolean fl = player.getServer().getProfileCache().get(s).map(prof -> this.data.getClaim().setPlayerGroup(prof.getId(), this.data.getGroup(), false)).orElse(true);
+            player.level().getServer().execute(() -> StringResultScreenHandler.createNewStringResult(player, (s) -> {
+                boolean fl = player.level().getServer().services().nameToIdCache().get(s).map(prof -> this.data.getClaim().setPlayerGroup(prof.id(), this.data.getGroup(), false)).orElse(true);
                 player.closeContainer();
-                player.getServer().execute(() -> GroupPlayerScreenHandler.openPlayerGroupMenu(player, this.data.getClaim(), this.data.getGroup()));
+                player.level().getServer().execute(() -> GroupPlayerScreenHandler.openPlayerGroupMenu(player, this.data.getClaim(), this.data.getGroup()));
                 if (fl)
                     ServerScreenHelper.playSongToPlayer(player, SoundEvents.ANVIL_USE, 1, 1f);
                 else {
@@ -110,7 +110,7 @@ public class GroupPlayerScreenHandler extends PagedServerOnlyScreenHandler<Claim
                 }
             }, () -> {
                 player.closeContainer();
-                player.getServer().execute(() -> GroupPlayerScreenHandler.openPlayerGroupMenu(player, this.data.getClaim(), this.data.getGroup()));
+                player.level().getServer().execute(() -> GroupPlayerScreenHandler.openPlayerGroupMenu(player, this.data.getClaim(), this.data.getGroup()));
                 ServerScreenHelper.playSongToPlayer(player, SoundEvents.VILLAGER_NO, 1, 1f);
             }));
             ServerScreenHelper.playSongToPlayer(player, SoundEvents.UI_BUTTON_CLICK, 1, 1f);
@@ -127,8 +127,8 @@ public class GroupPlayerScreenHandler extends PagedServerOnlyScreenHandler<Claim
         ItemStack stack = slot.getItem();
         if (!stack.isEmpty()) {
             ResolvableProfile profile = stack.get(DataComponents.PROFILE);
-            if (this.removeMode && profile != null && profile.id().isPresent()) {
-                this.data.getClaim().setPlayerGroup(profile.gameProfile().getId(), null, false);
+            if (this.removeMode && profile != null && profile.partialProfile().id() != null) {
+                this.data.getClaim().setPlayerGroup(profile.partialProfile().id(), null, false);
                 slot.set(ItemStack.EMPTY);
                 ServerScreenHelper.playSongToPlayer(player, SoundEvents.BAT_DEATH, 1, 1f);
             }
@@ -138,6 +138,6 @@ public class GroupPlayerScreenHandler extends PagedServerOnlyScreenHandler<Claim
 
     @Override
     protected PageSettings pageSettings() {
-        return new PageSettings((this.data.getClaim().playersFromGroup(this.player.getServer(), this.data.getGroup()).size() - 1) / 28, 47, 51);
+        return new PageSettings((this.data.getClaim().playerNamesFromGroup(this.player.level().getServer(), this.data.getGroup()).size() - 1) / 28, 47, 51);
     }
 }

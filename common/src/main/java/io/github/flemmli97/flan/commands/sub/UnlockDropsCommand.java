@@ -1,6 +1,5 @@
 package io.github.flemmli97.flan.commands.sub;
 
-import com.mojang.authlib.GameProfile;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
@@ -14,6 +13,7 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.GameProfileArgument;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.players.NameAndId;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -35,14 +35,14 @@ public class UnlockDropsCommand {
     }
 
     private static int unlockDropsPlayers(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
-        Collection<GameProfile> profs = GameProfileArgument.getGameProfiles(context, "players");
+        Collection<NameAndId> profs = GameProfileArgument.getGameProfiles(context, "players");
         List<String> success = new ArrayList<>();
-        for (GameProfile prof : profs) {
-            ServerPlayer player = context.getSource().getServer().getPlayerList().getPlayer(prof.getId());
+        for (NameAndId nameAndId : profs) {
+            ServerPlayer player = context.getSource().getServer().getPlayerList().getPlayer(nameAndId.id());
             if (player != null) {
                 PlayerClaimData data = PlayerClaimData.get(player);
                 data.unlockDeathItems();
-                success.add(prof.getName());
+                success.add(nameAndId.name());
             }
         }
         context.getSource().sendSuccess(() -> ClaimUtils.translatedText("flan.unlockDropsMulti", success, ChatFormatting.GOLD), false);

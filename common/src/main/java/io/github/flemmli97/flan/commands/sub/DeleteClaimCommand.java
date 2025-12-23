@@ -1,6 +1,5 @@
 package io.github.flemmli97.flan.commands.sub;
 
-import com.mojang.authlib.GameProfile;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
@@ -20,6 +19,7 @@ import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.GameProfileArgument;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.players.NameAndId;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -131,17 +131,17 @@ public class DeleteClaimCommand {
 
     private static int adminDeleteAll(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
         CommandSourceStack src = context.getSource();
-        Collection<GameProfile> profiles = GameProfileArgument.getGameProfiles(context, "players");
+        Collection<NameAndId> profiles = GameProfileArgument.getGameProfiles(context, "players");
         if (src.getEntity() instanceof ServerPlayer player) {
             PlayerClaimData data = PlayerClaimData.get(player);
             data.deferCommand(new PendingCommand(context, () -> {
                 List<String> players = new ArrayList<>();
-                for (GameProfile prof : profiles) {
+                for (NameAndId nameAndId : profiles) {
                     for (ServerLevel level : src.getLevel().getServer().getAllLevels()) {
                         ClaimStorage storage = ClaimStorage.get(level);
-                        storage.allClaimsFromPlayer(prof.getId()).forEach((claim) -> storage.deleteClaim(claim, true, ClaimMode.DEFAULT, level));
+                        storage.allClaimsFromPlayer(nameAndId.id()).forEach((claim) -> storage.deleteClaim(claim, true, ClaimMode.DEFAULT, level));
                     }
-                    players.add(prof.getName());
+                    players.add(nameAndId.name());
                 }
                 src.sendSuccess(() -> ClaimUtils.translatedText("flan.adminDeleteAll", players, ChatFormatting.GOLD), true);
                 return Command.SINGLE_SUCCESS;
@@ -150,12 +150,12 @@ public class DeleteClaimCommand {
             return Command.SINGLE_SUCCESS;
         }
         List<String> players = new ArrayList<>();
-        for (GameProfile prof : profiles) {
+        for (NameAndId nameAndId : profiles) {
             for (ServerLevel level : src.getLevel().getServer().getAllLevels()) {
                 ClaimStorage storage = ClaimStorage.get(level);
-                storage.allClaimsFromPlayer(prof.getId()).forEach((claim) -> storage.deleteClaim(claim, true, ClaimMode.DEFAULT, level));
+                storage.allClaimsFromPlayer(nameAndId.id()).forEach((claim) -> storage.deleteClaim(claim, true, ClaimMode.DEFAULT, level));
             }
-            players.add(prof.getName());
+            players.add(nameAndId.name());
         }
         src.sendSuccess(() -> ClaimUtils.translatedText("flan.adminDeleteAll", players, ChatFormatting.GOLD), true);
         return Command.SINGLE_SUCCESS;

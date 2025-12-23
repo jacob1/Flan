@@ -39,7 +39,6 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.server.packs.resources.PreparableReloadListener;
-import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
@@ -128,11 +127,12 @@ public class FlanFabric implements ModInitializer {
 
     private static void registerListener(ResourceLocation id, Function<HolderLookup.Provider, PreparableReloadListener> factory) {
         ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(id, provider -> new IdentifiableResourceReloadListener() {
+
             private final PreparableReloadListener listener = factory.apply(provider);
 
             @Override
-            public CompletableFuture<Void> reload(PreparationBarrier barrier, ResourceManager manager, Executor backgroundExecutor, Executor gameExecutor) {
-                return this.listener.reload(barrier, manager, backgroundExecutor, gameExecutor);
+            public CompletableFuture<Void> reload(SharedState sharedState, Executor exectutor, PreparationBarrier barrier, Executor applyExectutor) {
+                return this.listener.reload(sharedState, exectutor, barrier, applyExectutor);
             }
 
             @Override

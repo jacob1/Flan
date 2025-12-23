@@ -1,6 +1,5 @@
 package io.github.flemmli97.flan.commands.sub;
 
-import com.mojang.authlib.GameProfile;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
@@ -13,6 +12,7 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.GameProfileArgument;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.players.NameAndId;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,8 +33,8 @@ public class ClaimBlocksCommand {
         CommandSourceStack src = context.getSource();
         List<String> players = new ArrayList<>();
         int amount = IntegerArgumentType.getInteger(context, "amount");
-        for (GameProfile prof : GameProfileArgument.getGameProfiles(context, "players")) {
-            ServerPlayer player = src.getServer().getPlayerList().getPlayer(prof.getId());
+        for (NameAndId nameAndId : GameProfileArgument.getGameProfiles(context, "players")) {
+            ServerPlayer player = src.getServer().getPlayerList().getPlayer(nameAndId.id());
             if (player != null) {
                 PlayerClaimData data = PlayerClaimData.get(player);
                 if (base)
@@ -42,8 +42,8 @@ public class ClaimBlocksCommand {
                 else
                     data.setAdditionalClaims(data.getAdditionalClaims() + amount);
             } else
-                PlayerClaimData.editForOfflinePlayer(src.getServer(), prof.getId(), amount, base);
-            players.add(prof.getName());
+                PlayerClaimData.editForOfflinePlayer(src.getServer(), nameAndId.id(), amount, base);
+            players.add(nameAndId.name());
         }
         src.sendSuccess(() -> ClaimUtils.translatedText(base ? "flan.giveClaimBlocks" : "flan.giveClaimBlocksBonus", players, amount, ChatFormatting.GOLD), true);
         return players.size();

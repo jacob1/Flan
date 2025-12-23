@@ -11,6 +11,7 @@ import io.github.flemmli97.flan.config.ConfigHandler;
 import io.github.flemmli97.flan.mixin.BannedEntryAccessor;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.players.NameAndId;
 import net.minecraft.server.players.UserBanListEntry;
 
 import java.io.IOException;
@@ -117,7 +118,7 @@ public class OfflinePlayerData implements IPlayerData {
     }
 
     public boolean isExpired(LocalDateTime now) {
-        UserBanListEntry entry = this.server.getProfileCache().get(this.owner).map(this.server.getPlayerList().getBans()::get).orElse(null);
+        UserBanListEntry entry = this.server.services().nameToIdCache().get(owner).map(this.server.getPlayerList().getBans()::get).orElse(null);
         boolean banned = entry != null && entry.getExpires() == null;
         if (banned) {
             LocalDateTime bannedTime = LocalDateTime.ofInstant(((BannedEntryAccessor) entry).getCreationDate().toInstant(), ZoneId.systemDefault());
