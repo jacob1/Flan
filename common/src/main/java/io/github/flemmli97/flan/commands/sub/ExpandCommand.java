@@ -42,10 +42,10 @@ public class ExpandCommand {
         if (!checkExpandPermission(context.getSource(), player, claim, mode)) {
             return 0;
         }
-        if (amount <= 0) {
+        /*if (amount <= 0) {
             sendExpandError(context.getSource(), "flan.invalidDistance");
             return 0;
-        }
+        }*/
         Direction facing = player.getDirection();
         if ((!claim.is3d() || !mode.is3d) && (facing == Direction.UP || facing == Direction.DOWN)) {
             sendExpandError(context.getSource(), facing == Direction.UP ? "flan.expandUpDisabled" : "flan.expandDownDisabled");
@@ -66,16 +66,16 @@ public class ExpandCommand {
     private static Pair<BlockPos, BlockPos> calculateCorners(ClaimBox dims, Direction facing, int amount, ClaimBox restriction) {
         return switch (facing) {
             case SOUTH -> new Pair<>(
-                    new BlockPos(dims.maxX(), dims.minY(), dims.maxZ()),
+                    new BlockPos(dims.maxX(), dims.maxY(), dims.maxZ()),
                     new BlockPos(dims.maxX(), dims.maxY(), restriction != null ? Math.min(dims.maxZ() + amount, restriction.maxZ()) : dims.maxZ() + amount));
             case EAST -> new Pair<>(
-                    new BlockPos(dims.maxX(), dims.minY(), dims.maxZ()),
+                    new BlockPos(dims.maxX(), dims.maxY(), dims.maxZ()),
                     new BlockPos(restriction != null ? Math.min(dims.maxX() + amount, restriction.maxX()) : dims.maxX() + amount, dims.maxY(), dims.maxZ()));
             case NORTH -> new Pair<>(
-                    new BlockPos(dims.minX(), dims.minY(), dims.minZ()),
+                    new BlockPos(dims.minX(), dims.maxY(), dims.minZ()),
                     new BlockPos(dims.minX(), dims.maxY(), restriction != null ? Math.max(dims.minZ() - amount, restriction.minZ()) : dims.minZ() - amount));
             case WEST -> new Pair<>(
-                    new BlockPos(dims.minX(), dims.minY(), dims.minZ()),
+                    new BlockPos(dims.minX(), dims.maxY(), dims.minZ()),
                     new BlockPos(restriction != null ? Math.max(dims.minX() - amount, restriction.minX()) : dims.minX() - amount, dims.maxY(), dims.minZ()));
             //adding up and down for diagonical logic in future
             case UP -> new Pair<>(
