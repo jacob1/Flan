@@ -37,7 +37,7 @@ public class DynmapIntegration {
             return;
         ClaimBox dim = claim.getDimensions();
         AreaMarker marker = markerSet.createAreaMarker(claim.getClaimID().toString(), claimLabel(claim), true, getWorldName(claim.getLevel()),
-                new double[]{dim.minX(), dim.maxX()}, new double[]{dim.minZ(), dim.maxZ()}, false);
+                new double[]{dim.minX(), dim.maxX() + 1}, new double[]{dim.minZ(), dim.maxZ() + 1}, false);
         if (marker != null) {
             marker.setLineStyle(3, 0.8, lineColor(claim.isAdminClaim()));
             marker.setFillStyle(0.2, fillColor(claim.isAdminClaim()));
