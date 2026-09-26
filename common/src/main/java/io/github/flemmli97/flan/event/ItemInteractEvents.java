@@ -101,10 +101,12 @@ public class ItemInteractEvents {
         if (!(context.getPlayer() instanceof ServerPlayer player) || context.getItemInHand().isEmpty())
             return InteractionResult.PASS;
         ClaimStorage storage = ClaimStorage.get((ServerLevel) context.getLevel());
-        BlockPos interactPos = context.getClickedPos();
+	    // TODO undesired behavior from https://github.com/Flemmli97/Flan/commit/0dfce535956e3cc1a673d7038043ba104b3d5b63
+	    // TODO but originally, only checked block place position
+        /*BlockPos interactPos = context.getClickedPos();
         InteractionResult interact = itemUseOn(context.getLevel(), player, storage, interactPos, context.getItemInHand(), hadBlockSuccess);
         if (interact != InteractionResult.PASS)
-            return interact;
+            return interact;*/
         BlockPos placePos = new BlockPlaceContext(context).getClickedPos();
         return itemUseOn(context.getLevel(), player, storage, placePos, context.getItemInHand(), hadBlockSuccess);
     }
