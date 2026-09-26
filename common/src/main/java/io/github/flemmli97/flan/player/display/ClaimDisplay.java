@@ -12,6 +12,7 @@ import net.minecraft.core.Vec3i;
 import net.minecraft.network.protocol.game.ClientboundLevelParticlesPacket;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
@@ -243,11 +244,13 @@ public class ClaimDisplay {
             return new Height(height, liquidHeight);
         }
         //Move Up
-        while (!state.canBeReplaced() && !chunk.isOutsideBuildHeight(pos)) {
+	    boolean isSign = false;
+        while ((!state.canBeReplaced() || state.is(BlockTags.ALL_SIGNS)) && !chunk.isOutsideBuildHeight(pos)) {
+			isSign = state.is(BlockTags.ALL_SIGNS);
             pos.move(0, 1, 0);
             state = chunk.getBlockState(pos);
         }
-        int height = pos.getY() - 1;
+        int height = pos.getY() - 1 + (isSign ? 1 : 0);
         boolean liquid = false;
         while (state.liquid() && !state.canBeReplaced() && !chunk.isOutsideBuildHeight(pos)) {
             pos.move(0, 1, 0);

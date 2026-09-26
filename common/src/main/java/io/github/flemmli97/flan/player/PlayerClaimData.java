@@ -33,6 +33,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.level.levelgen.Heightmap;
@@ -344,6 +345,13 @@ public class PlayerClaimData implements IPlayerData {
             this.claimingRange = this.getClaimMode().is3d && this.editingCorner() != null ? 10 : 64;
             BlockPos pos = ItemInteractEvents.rayTargetPos(this.player);
             if (pos != null && !pos.equals(this.firstCorner)) {
+				while (true) {
+					var state = this.player.level().getBlockState(pos);
+					if (state.is(BlockTags.ALL_SIGNS))
+						pos = pos.above();
+					else
+						break;
+				}
                 this.clientBlockDisplayTracker.displayFakeBlocks(this.display3D,
                         new ClientBlockDisplayTracker.DisplayData(pos, Blocks.WOOL.yellow().defaultBlockState()));
             } else {
