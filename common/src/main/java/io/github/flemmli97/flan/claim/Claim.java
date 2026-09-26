@@ -515,11 +515,13 @@ public class Claim implements IPermissionContainer {
         if (group == null) {
             this.playersGroups.remove(player);
             this.setDirty(true);
+	        MapCalls.updateClaimGroupMemberships(this);
             return true;
         }
         if (!this.playersGroups.containsKey(player) || force) {
             this.playersGroups.put(player, group);
             this.setDirty(true);
+	        MapCalls.updateClaimGroupMemberships(this);
             return true;
         }
         return false;
@@ -599,6 +601,7 @@ public class Claim implements IPermissionContainer {
                     toRemove.add(uuid);
             });
             toRemove.forEach(this.playersGroups::remove);
+			MapCalls.updateClaimGroupMemberships(this);
             this.setDirty(true);
             return true;
         }
@@ -973,24 +976,31 @@ public class Claim implements IPermissionContainer {
                 l.add(fromPermissionMap("flan.claimInfoPerms", this.globalPerm));
             if (infoType == InfoType.ALL || infoType == InfoType.GROUP) {
                 l.add(ClaimUtils.translatedText("flan.claimGroupInfoHeader", ChatFormatting.GOLD));
-                Map<String, List<String>> nameToGroup = new HashMap<>();
-                for (Map.Entry<UUID, String> e : this.playersGroups.entrySet()) {
-                    ClaimUtils.fetchUsername(e.getKey(), this.level.getServer(), true).ifPresent(name ->
-                            nameToGroup.merge(e.getValue(), Lists.newArrayList(name), (old, val) -> {
-                                old.add(name);
-                                return old;
-                            })
-                    );
-                }
+                Map<String, List<String>> groupToNames = getGroupToNames();
                 for (Map.Entry<String, Map<Identifier, Boolean>> e : this.permissions.entrySet()) {
+					List<String> playerNames = groupToNames.getOrDefault(e.getKey(), new ArrayList<>());
                     l.add(ClaimUtils.translatedText(String.format("  %s:", e.getKey()), ChatFormatting.YELLOW));
-                    l.add(fromPermissionMap("flan.claimGroupPerms", e.getValue()));
-                    l.add(ClaimUtils.translatedText("flan.claimGroupPlayers", nameToGroup.getOrDefault(e.getKey(), new ArrayList<>()), ChatFormatting.RED));
+	                l.add(fromPermissionMap("flan.claimGroupPerms", e.getValue()));
+                    l.add(ClaimUtils.translatedText("flan.claimGroupPlayers", playerNames, ChatFormatting.RED));
                 }
             }
         }
         l.add(ClaimUtils.translatedText("=============================================", ChatFormatting.GREEN));
         return l;
+    }
+
+    public Map<String, List<String>> getGroupToNames() {
+        Map<String, List<String>> nameToGroup = new HashMap<>();
+        for (Map.Entry<UUID, String> e : this.playersGroups.entrySet()) {
+            ClaimUtils.fetchUsername(e.getKey(), this.level.getServer(), true).ifPresent(name ->
+                nameToGroup.merge(e.getValue(), Lists.newArrayList(name), (old, val) -> {
+                    old.add(name);
+                    return old;
+                })
+            );
+        }
+
+        return nameToGroup;
     }
 
     private static Component fromPermissionMap(String lang, Map<Identifier, Boolean> map) {

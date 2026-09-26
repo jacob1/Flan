@@ -48,6 +48,11 @@ public class MapCalls {
             JourneymapIntegration.changeClaimOwner(claim);
     }
 
+	public static void updateClaimGroupMemberships(Claim claim) {
+		if (dynmapLoaded && ConfigHandler.CONFIG.dynmapIntegration)
+			DynmapIntegration.updateClaimGroupMemberships(claim);
+	}
+
     public static void onExtendDownwards(Claim claim) {
         if (dynmapLoaded && ConfigHandler.CONFIG.dynmapIntegration) {
             DynmapIntegration.removeMarker(claim);

@@ -13,6 +13,7 @@ import org.dynmap.markers.AreaMarker;
 import org.dynmap.markers.MarkerAPI;
 import org.dynmap.markers.MarkerSet;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -42,6 +43,7 @@ public class DynmapIntegration {
             marker.setLineStyle(3, 0.8, lineColor(claim.isAdminClaim()));
             marker.setFillStyle(0.2, fillColor(claim.isAdminClaim()));
             marker.setRangeY(dim.minY(), dim.maxY());
+	        updateClaimLabels(claim);
         }
     }
 
@@ -54,21 +56,15 @@ public class DynmapIntegration {
     }
 
     static void changeClaimName(Claim claim) {
-        if (markerSet == null)
-            return;
-        AreaMarker marker = markerSet.findAreaMarker(claim.getClaimID().toString());
-        if (marker != null)
-            marker.setLabel(claimLabel(claim));
+        updateClaimLabels(claim);
     }
 
     static void changeClaimOwner(Claim claim) {
-        if (markerSet == null)
-            return;
-        if (claim.getClaimName() == null || claim.getClaimName().isEmpty()) {
-            AreaMarker marker = markerSet.findAreaMarker(claim.getClaimID().toString());
-            if (marker != null)
-                marker.setLabel(claimLabel(claim));
-        }
+        updateClaimLabels(claim);
+    }
+
+    static void updateClaimGroupMemberships(Claim claim) {
+        updateClaimLabels(claim);
     }
 
     private static String getWorldName(Level level) {
@@ -91,16 +87,74 @@ public class DynmapIntegration {
         return admin ? ConfigHandler.CONFIG.adminMapFillColor : ConfigHandler.CONFIG.mapFillColor;
     }
 
+    private static void updateClaimLabels(Claim claim) {
+        if (markerSet == null)
+            return;
+        AreaMarker marker = markerSet.findAreaMarker(claim.getClaimID().toString());
+        if (marker != null) {
+	        marker.setLabel(claimLabel(claim));
+
+            StringBuilder builder = new StringBuilder();
+
+			if (claim.getClaimName() != null && !claim.getClaimName().isBlank()) {
+				builder.append(claim.getClaimName());
+				builder.append("<br/>");
+			}
+
+			if (claim.isAdminClaim()) {
+				builder.append("<b>Admin Claim</b>");
+			} else {
+				builder.append(claimOwner(claim));
+			}
+
+	        addGroupAccessLabels(claim, builder);
+
+            marker.setDescription(builder.toString());
+        }
+    }
+
+	private static void addGroupAccessLabels(Claim claim, StringBuilder builder) {
+		var groupToNames = claim.getGroupToNames();
+
+		boolean hasGroupPermissions = groupToNames.values().stream().anyMatch(names -> !names.isEmpty());
+		if (!hasGroupPermissions)
+			return;
+
+		builder.append("<br/><br/>");
+
+		for (var entry : groupToNames.entrySet()) {
+			String groupName = entry.getKey();
+			List<String> playerNames = entry.getValue();
+			if (playerNames.isEmpty())
+				continue;
+
+			builder.append("<br/><b>").append(groupName).append("</b><br/>");
+			// Append comma-separated player names, put a newline every 3 names
+			for (int i = 0; i < playerNames.size(); i++) {
+				if (i > 0)
+					builder.append(", ");
+				if (i % 3 == 0 && i > 0)
+					builder.append("<br/>");
+				builder.append(playerNames.get(i));
+			}
+			builder.append("<br/>");
+		}
+	}
+
     private static String claimLabel(Claim claim) {
         String name = claim.getClaimName();
         if (name == null || name.isEmpty()) {
             if (claim.isAdminClaim())
                 return "Admin Claim";
-            Optional<String> prof = ClaimUtils.fetchUsername(claim.getOwner(), claim.getLevel().getServer());
-            return prof.orElse("UNKOWN") + "'s Claim";
+            return claimOwner(claim);
         }
         return name;
     }
+
+	private static String claimOwner(Claim claim) {
+		Optional<String> prof = ClaimUtils.fetchUsername(claim.getOwner(), claim.getLevel().getServer());
+		return prof.orElse("UNKNOWN (" + claim.getOwner().toString() + ")") + "'s Claim";
+	}
 
     public static void updateStyles(ClaimStorage storage) {
         if (markerSet == null)
