@@ -42,7 +42,8 @@ public class DynmapIntegration {
         if (marker != null) {
             marker.setLineStyle(3, 0.8, lineColor(claim.isAdminClaim()));
             marker.setFillStyle(0.2, fillColor(claim.isAdminClaim()));
-            marker.setRangeY(dim.minY(), dim.maxY());
+            marker.setRangeY(64, 64);
+	        //marker.setRangeY(dim.minY(), dim.maxY()); // TODO - disabled so that opacity works
 	        updateClaimLabels(claim);
         }
     }
